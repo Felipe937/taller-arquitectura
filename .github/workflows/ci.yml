@@ -1,0 +1,52 @@
+# Archivo: .github/workflows/ci.yml
+
+name: Taller CI Pipeline # Nombre del pipeline
+
+on:
+  push: # Se activa con CADA push (commit)
+    branches: [ "main" ] # Solo en la rama principal
+  workflow_dispatch: # Permite iniciarlo manualmente
+
+jobs:
+  # 1. El trabajo de "Construcción" (Build)
+  build:
+    runs-on: ubuntu-latest # Se ejecuta en una máquina virtual de Linux
+
+    steps:
+      - name: 1. Checkout del código
+        uses: actions/checkout@v4 # Acción oficial para descargar el código del repo
+
+      - name: 2. Simular una construcción (Build)
+        run: echo "Construyendo el proyecto... (aquí iría 'npm run build', etc.)"
+
+      - name: 3. Simular guardado de artefacto
+        run: |
+          mkdir -p build
+          cp index.html build/
+          echo "Archivos 'construidos' movidos a la carpeta /build"
+
+  # 2. El trabajo de "Pruebas" (Test)
+  test:
+    needs: build # Este trabajo NO empieza hasta que 'build' termine
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. Checkout del código
+        uses: actions/checkout@v4
+
+      - name: 2. Simular pruebas (Linting)
+        run: |
+          echo "Ejecutando pruebas..."
+          # Simulación de una prueba que busca la palabra "Rock"
+          grep -q "Rock" index.html
+          echo "Prueba de 'Linting' pasada."
+
+      - name: 3. Simular pruebas de unidad (Unit Test)
+        run: |
+          echo "Ejecutando pruebas de unidad..."
+          # Simulación de una prueba que busca el copyright
+          grep -q "EventFlow" index.html
+          echo "Prueba de 'Copyright' pasada."
+          
+      - name: 4. ¡Despliegue simulado!
+        run: echo "¡Pruebas exitosas! Listo para desplegar."
