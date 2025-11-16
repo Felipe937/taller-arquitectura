@@ -31,8 +31,13 @@ jobs:
     - name: Run tests with coverage
       run: |
         cd src
-        coverage run --source=. -m pytest tests/ -v
-        coverage xml
+        coverage run --source=. -m pytest tests/ -v --junitxml=test-results.xml
+        coverage xml -i
+        
+    - name: Fix coverage file paths
+      run: |
+        # Asegurar que coverage.xml tiene rutas correctas para SonarCloud
+        sed -i 's/filename="/filename="src\//g' src/coverage.xml
         
     - name: SonarCloud Scan
       uses: SonarSource/sonarcloud-github-action@master
@@ -41,8 +46,9 @@ jobs:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       with:
         args: >
-          -Dsonar.projectKey=tu-usuario_taller-arquitectura
-          -Dsonar.organization=tu-usuario-github
+          -Dsonar.projectKey=SpaceYisus_taller-arquitectura
+          -Dsonar.organization=spaceyisus
           -Dsonar.python.coverage.reportPaths=src/coverage.xml
+          -Dsonar.python.xunit.reportPath=src/test-results.xml
           -Dsonar.sources=src
           -Dsonar.tests=src/tests
