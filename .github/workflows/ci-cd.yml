@@ -38,6 +38,10 @@ jobs:
       run: |
         sed -i 's/filename="/filename="src\//g' src/coverage.xml
         
+    - name: Clean SonarCloud cache
+      run: |
+        echo "Forcing clean analysis with new project key"
+        
     - name: SonarCloud Scan
       uses: SonarSource/sonarcloud-github-action@master
       env:
@@ -45,13 +49,9 @@ jobs:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       with:
         args: >
-          -Dsonar.projectKey=SpaceYisus_taller-arquitectura
+          -Dsonar.projectKey=SpaceYisus_taller_arquitectura_CLEAN
           -Dsonar.organization=spaceyisus
           -Dsonar.python.coverage.reportPaths=src/coverage.xml
           -Dsonar.python.xunit.reportPath=src/test-results.xml
           -Dsonar.sources=src
           -Dsonar.tests=src/tests
-    - name: Clean SonarCloud cache
-      run: |
-        # Forzar análisis limpio
-        echo "Cleaning previous analysis data"
