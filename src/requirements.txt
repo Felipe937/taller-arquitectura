@@ -1,0 +1,4 @@
+flask==2.3.3
+sqlite3
+pytest==7.4.2
+coverage==7.2.7
