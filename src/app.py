@@ -6,7 +6,7 @@ def print_events(events):
 # === SECURITY HOTSPOTS PARA SONARCLOUD - VERSIÓN CORREGIDA ===
 
 # 1. Hardcoded password (Security Hotspot)
-DATABASE_PASSWORD = "admin123"  # Cambiar por variable de entornO
+DATABASE_PASSWORD = "admin123"  # Cambiar por variable de entorno
 
 # 2. SQL Injection potential (Security Hotspot)
 def get_user_data_unsafe(user_id):
