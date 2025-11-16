@@ -51,3 +51,7 @@ jobs:
           -Dsonar.python.xunit.reportPath=src/test-results.xml
           -Dsonar.sources=src
           -Dsonar.tests=src/tests
+    - name: Clean SonarCloud cache
+      run: |
+        # Forzar análisis limpio
+        echo "Cleaning previous analysis data"
