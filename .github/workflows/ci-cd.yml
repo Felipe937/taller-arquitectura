@@ -7,66 +7,42 @@ on:
     branches: [ main ]
 
 jobs:
-  test:
+  sonarcloud:
+    name: SonarCloud Analysis
     runs-on: ubuntu-latest
     
     steps:
     - name: Checkout código
       uses: actions/checkout@v4
-      
-    - name: Configurar Python
+      with:
+        fetch-depth: 0  # IMPORTANTE: Para análisis completo
+        
+    - name: Setup Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.9'
         
-    - name: Instalar dependencias
-      run: |
-        pip install -r src/requirements.txt
-        pip install pytest coverage
-        
-    - name: Ejecutar tests con cobertura
+    - name: Install dependencies
       run: |
         cd src
-        coverage run -m pytest tests/ -v
-        coverage xml -i
+        pip install -r requirements.txt
+        pip install pytest coverage
         
-    - name: Ejecutar SonarCloud Scan
+    - name: Run tests with coverage
+      run: |
+        cd src
+        coverage run --source=. -m pytest tests/ -v
+        coverage xml
+        
+    - name: SonarCloud Scan
       uses: SonarSource/sonarcloud-github-action@master
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        
-    - name: Subir resultados de tests
-      uses: actions/upload-artifact@v3
       with:
-        name: test-results
-        path: src/coverage.xml
-
-  security-scan:
-    runs-on: ubuntu-latest
-    needs: test
-    
-    steps:
-    - name: Checkout código
-      uses: actions/checkout@v4
-      
-    - name: Ejecutar seguridad
-      run: |
-        echo "Ejecutando análisis de seguridad..."
-        pip install bandit
-        bandit -r src/ -f json
-        
-    - name: Análisis de dependencias
-      uses: actions/dependency-review-action@v3
-
-  deploy-preview:
-    runs-on: ubuntu-latest
-    needs: [test, security-scan]
-    if: github.event_name == 'pull_request'
-    
-    steps:
-    - name: Deploy a entorno de preview
-      run: |
-        echo "Desplegando preview del PR..."
-        # Simular deploy
-        echo "✅ Preview desplegado en: https://preview-${{ github.event.pull_request.number }}.eventflow.app"
+        args: >
+          -Dsonar.projectKey=tu-usuario_taller-arquitectura
+          -Dsonar.organization=tu-usuario-github
+          -Dsonar.python.coverage.reportPaths=src/coverage.xml
+          -Dsonar.sources=src
+          -Dsonar.tests=src/tests
