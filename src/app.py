@@ -1,38 +1,111 @@
+"""
+EventFlow - Sistema de Gestión de Eventos
+Versión con deuda técnica intencional para SonarCloud
+"""
+import sqlite3
+import json
+from datetime import datetime
+
+class EventManager:
+    def __init__(self):
+        self.conn = sqlite3.connect('events.db')
+        self.create_tables()
+    
+    def create_tables(self):
+        """Crear tablas de la base de datos"""
+        cursor = self.conn.cursor()
+        
+        # DEUDA TÉCNICA: Falta manejo de errores
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS events (
+                id INTEGER PRIMARY KEY,
+                name TEXT,
+                date TEXT,
+                capacity INTEGER
+            )
+        ''')
+        
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS tickets (
+                id INTEGER PRIMARY KEY,
+                event_id INTEGER,
+                user_email TEXT,
+                quantity INTEGER
+            )
+        ''')
+        self.conn.commit()
+    
+    def create_event(self, name, date, capacity):
+        """Crear un nuevo evento"""
+        cursor = self.conn.cursor()
+        cursor.execute(
+            "INSERT INTO events (name, date, capacity) VALUES (?, ?, ?)",
+            (name, date, capacity)
+        )
+        self.conn.commit()
+        return cursor.lastrowid
+    
+    def get_events(self):
+        """Obtener todos los eventos"""
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT * FROM events")
+        return cursor.fetchall()
+    
+    def buy_ticket(self, event_id, user_email, quantity):
+        """Comprar entradas para un evento"""
+        cursor = self.conn.cursor()
+        
+        cursor.execute("SELECT capacity FROM events WHERE id = ?", (event_id,))
+        event = cursor.fetchone()
+        
+        if not event:
+            return {"error": "Evento no encontrado"}
+        
+        capacity = event[0]
+        
+        cursor.execute("SELECT SUM(quantity) FROM tickets WHERE event_id = ?", (event_id,))
+        sold = cursor.fetchone()[0] or 0
+        
+        if sold + quantity > capacity:
+            return {"error": "No hay suficiente capacidad"}
+        
+        cursor.execute(
+            "INSERT INTO tickets (event_id, user_email, quantity) VALUES (?, ?, ?)",
+            (event_id, user_email, quantity)
+        )
+        self.conn.commit()
+        
+        return {"success": True, "tickets": quantity}
+
 # DEUDA TÉCNICA: Código duplicado
 def print_events(events):
     for event in events:
         print(f"Evento: {event[1]}, Fecha: {event[2]}")
 
-# === SECURITY HOTSPOTS PARA SONARCLOUD - VERSIÓN CORREGIDA ===
+# === SECURITY HOTSPOTS PARA SONARCLOUD ===
 
-# 1. Hardcoded password (Security Hotspot)
-DATABASE_PASSWORD = "admin123"  # Cambiar por variable de entorno
+# 1. Hardcoded password
+DATABASE_PASSWORD = "admin123"
 
-# 2. SQL Injection potential (Security Hotspot)
-def get_user_data_unsafe(user_id):
-    import sqlite3
-    conn = sqlite3.connect('test.db')
-    cursor = conn.cursor()
-    
-    # ❌ VULNERABLE: SQL Injection
-    cursor.execute(f"SELECT * FROM users WHERE id = {user_id}")
-    
-    # ✅ SECURE: Parameterized query  
-    cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
-    
-    return cursor.fetchall()
-
-# 3. Weak cryptography (Security Hotspot)
-def weak_encryption(data):
-    # ❌ VULNERABLE: Weak encryption
-    simple_key = "1234567890123456"  # Should be generated securely
-    return data.encode()  # No real encryption
-
-# 4. Hardcoded API keys (Security Hotspot)
+# 2. Hardcoded API keys
 API_KEY = "sk_live_1234567890abcdef"
 STRIPE_SECRET = "sk_test_9876543210"
 
-# 5. More code duplication for SonarCloud detection
+# 3. SQL Injection vulnerable
+def get_user_data_unsafe(user_id):
+    conn = sqlite3.connect('test.db')
+    cursor = conn.cursor()
+    cursor.execute(f"SELECT * FROM users WHERE id = {user_id}")
+    cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+    return cursor.fetchall()
+
+# 4. Weak encryption
+def weak_encryption(data):
+    simple_key = "1234567890123456"
+    return data.encode()
+
+# === CÓDIGO DUPLICADO INTENCIONAL ===
+
 def print_events_duplicate(events):
     for event in events:
         print(f"Evento: {event[1]}, Fecha: {event[2]}")
@@ -41,18 +114,12 @@ def print_events_duplicate_copy(events):
     for event in events:
         print(f"Evento: {event[1]}, Fecha: {event[2]}")
 
-# === MÁS CÓDIGO DUPLICADO PARA SONARCLOUD ===
-
-# Duplicación intencional 1
 def calcular_precio_base(cantidad):
-    precio = cantidad * 100
-    return precio
+    return cantidad * 100
 
 def calcular_precio_base_copia(cantidad):
-    precio = cantidad * 100
-    return precio
+    return cantidad * 100
 
-# Duplicación intencional 2  
 def validar_usuario(email, password):
     if "@" in email and len(password) > 6:
         return True
@@ -62,60 +129,3 @@ def validar_usuario_copia(email, password):
     if "@" in email and len(password) > 6:
         return True
     return False
-
-# Duplicación intencional 3
-def formatear_fecha(fecha_str):
-    partes = fecha_str.split("-")
-    return f"{partes[2]}/{partes[1]}/{partes[0]}"
-
-def formatear_fecha_copia(fecha_str):
-    partes = fecha_str.split("-")
-    return f"{partes[2]}/{partes[1]}/{partes[0]}"
-
-# Método largo para complexity
-def proceso_venta_muy_largo(usuario_id, evento_id, cantidad):
-    # Paso 1: Validar usuario
-    usuario = obtener_usuario(usuario_id)
-    if not usuario:
-        return "Error: Usuario no existe"
-    
-    # Paso 2: Validar evento
-    evento = obtener_evento(evento_id)
-    if not evento:
-        return "Error: Evento no existe"
-    
-    # Paso 3: Validar disponibilidad
-    if cantidad > evento.capacidad_disponible:
-        return "Error: No hay suficiente capacidad"
-    
-    # Paso 4: Calcular precio
-    precio_base = cantidad * evento.precio
-    iva = precio_base * 0.16
-    total = precio_base + iva
-    
-    # Paso 5: Crear orden
-    orden_id = crear_orden(usuario_id, evento_id, cantidad, total)
-    
-    # Paso 6: Actualizar inventario
-    actualizar_inventario(evento_id, cantidad)
-    
-    # Paso 7: Enviar confirmación
-    enviar_email_confirmacion(usuario.email, orden_id)
-    
-    return f"Venta exitosa. Orden: {orden_id}"
-
-# Métodos dummy para que no falle
-def obtener_usuario(id):
-    return {"id": id, "email": "test@test.com"}
-
-def obtener_evento(id):
-    return {"id": id, "precio": 100, "capacidad_disponible": 50}
-
-def crear_orden(usuario_id, evento_id, cantidad, total):
-    return "ORD-12345"
-
-def actualizar_inventario(evento_id, cantidad):
-    pass
-
-def enviar_email_confirmacion(email, orden_id):
-    pass
