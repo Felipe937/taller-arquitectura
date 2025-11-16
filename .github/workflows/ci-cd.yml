@@ -15,7 +15,7 @@ jobs:
     - name: Checkout código
       uses: actions/checkout@v4
       with:
-        fetch-depth: 0  # IMPORTANTE: Para análisis completo
+        fetch-depth: 0
         
     - name: Setup Python
       uses: actions/setup-python@v4
@@ -36,7 +36,6 @@ jobs:
         
     - name: Fix coverage file paths
       run: |
-        # Asegurar que coverage.xml tiene rutas correctas para SonarCloud
         sed -i 's/filename="/filename="src\//g' src/coverage.xml
         
     - name: SonarCloud Scan
